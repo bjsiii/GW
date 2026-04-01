@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groundworks Tools</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2a2f45;
+      --blue: #4fc3f7;
+      --orange: #f97316;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --font-head: 'Bebas Neue', sans-serif;
+      --font-body: 'IBM Plex Mono', monospace;
+      --nav-h: 52px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow: hidden;
+    }
+
+    /* ── Top Nav ── */
+    #nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .nav-brand:hover { background: var(--surface2); }
+
+    .brand-text {
+      font-family: var(--font-head);
+      font-size: 22px;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      line-height: 1;
+    }
+    .brand-text span { color: var(--orange); }
+
+    .nav-tabs {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 1.25rem;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      border-right: 1px solid var(--border);
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .tab:hover { background: var(--surface2); color: var(--text); }
+    .tab.active-orange { color: var(--orange); border-bottom-color: var(--orange); background: rgba(249,115,22,0.07); }
+    .tab.active-blue   { color: var(--blue);   border-bottom-color: var(--blue);   background: rgba(79,195,247,0.07); }
+
+    .tab-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-orange { background: var(--orange); }
+    .dot-blue   { background: var(--blue); }
+
+    /* ── Content Area ── */
+    #content {
+      position: fixed;
+      top: var(--nav-h);
+      left: 0; right: 0; bottom: 0;
+    }
+
+    .pane {
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+    .pane.visible { display: flex; }
+
+    /* ── Home Pane ── */
+    #home-pane {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      background: var(--bg);
+    }
+
+    .home-inner { width: 100%; max-width: 520px; }
+
+    .home-header { text-align: center; margin-bottom: 2.5rem; }
+
+    .home-eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .home-title {
+      font-family: var(--font-head);
+      font-size: clamp(48px, 10vw, 68px);
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+    .home-title span { color: var(--orange); }
+
+    .home-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 0.6rem;
+      letter-spacing: 0.05em;
+    }
+
+    .cards { display: flex; flex-direction: column; gap: 12px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.25rem 1.25rem 1rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+    }
+    .card-orange::before { background: var(--orange); }
+    .card-blue::before   { background: var(--blue); }
+    .card:hover { background: var(--surface2); transform: translateY(-1px); }
+    .card-orange:hover { border-color: var(--orange); }
+    .card-blue:hover   { border-color: var(--blue); }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 28px;
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+    .card-orange .card-title { color: var(--orange); }
+    .card-blue   .card-title { color: var(--blue); }
+
+    .card-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 3px;
+      white-space: nowrap;
+      margin-top: 3px;
+    }
+    .card-orange .card-badge { background: rgba(249,115,22,0.12); color: var(--orange); }
+    .card-blue   .card-badge { background: rgba(79,195,247,0.12); color: var(--blue); }
+
+    .card-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 1rem;
+    }
+
+    .card-footer {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-orange .card-footer { color: var(--orange); }
+    .card-blue   .card-footer { color: var(--blue); }
+
+    .arrow { display: inline-block; transition: transform 0.15s; }
+    .card:hover .arrow { transform: translateX(4px); }
+
+    .home-footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── iFrame Panes ── */
+    .pane.iframe-pane { display: none; }
+    .pane.iframe-pane.visible { display: block; }
+
+    .pane iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <nav id="nav">
+    <div class="nav-brand" onclick="showPane('home')" title="Home">
+      <span class="brand-text">GROUND<span>WORKS</span></span>
+    </div>
+    <div class="nav-tabs">
+      <div class="tab" id="tab-wills" onclick="showPane('wills')">
+        <span class="tab-dot dot-orange"></span>
+        Wills Builder
+      </div>
+      <div class="tab" id="tab-property" onclick="showPane('property')">
+        <span class="tab-dot dot-blue"></span>
+        Property Lookup
+      </div>
+    </div>
+  </nav>
+
+  <div id="content">
+
+    <!-- Home -->
+    <div class="pane visible" id="home-pane">
+      <div class="home-inner">
+        <div class="home-header">
+          <p class="home-eyebrow">Groundworks</p>
+          <h1 class="home-title">SALES<span>TOOLS</span></h1>
+          <p class="home-sub">Select a tool to get started</p>
+        </div>
+        <div class="cards">
+          <div class="card card-orange" onclick="showPane('wills')">
+            <div class="card-header">
+              <div class="card-title">WILLS BUILDER</div>
+              <span class="card-badge">Contract Gen</span>
+            </div>
+            <p class="card-desc">Checklist-driven contractor &amp; customer will generator. Covers waterproofing, foundation repair, crawlspace, and concrete lifting.</p>
+            <div class="card-footer">Open Wills Builder <span class="arrow">→</span></div>
+          </div>
+          <div class="card card-blue" onclick="showPane('property')">
+            <div class="card-header">
+              <div class="card-title">PROPERTY LOOKUP</div>
+              <span class="card-badge">Assessor DB</span>
+            </div>
+            <p class="card-desc">Quick access to MA &amp; RI town assessor databases. Tap a town to open its portal and search for field sketches with dimensions.</p>
+            <div class="card-footer">Open Property Lookup <span class="arrow">→</span></div>
+          </div>
+        </div>
+        <p class="home-footer">Groundworks — Internal Sales Tools</p>
+      </div>
+    </div>
+
+    <!-- Wills Builder -->
+    <div class="pane iframe-pane" id="wills-pane">
+      <iframe id="wills-frame" src="" title="Wills Builder"></iframe>
+    </div>
+
+    <!-- Property Lookup -->
+    <div class="pane iframe-pane" id="property-pane">
+      <iframe id="property-frame" src="" title="Property Lookup"></iframe>
+    </div>
+
+  </div>
+
+  <script>
+    const config = {
+      home:     { pane: 'home-pane',     tab: null,           frame: null,             src: null,                                                activeClass: null },
+      wills:    { pane: 'wills-pane',    tab: 'tab-wills',    frame: 'wills-frame',    src: 'https://bjsiii.github.io/WPWills/index.html',        activeClass: 'active-orange' },
+      property: { pane: 'property-pane', tab: 'tab-property', frame: 'property-frame', src: 'https://bjsiii.github.io/PropertyLookup/index.html', activeClass: 'active-blue' },
+    };
+
+    let current = 'home';
+    const loaded = {};
+
+    function showPane(name) {
+      if (name === current) return;
+
+      const prev = config[current];
+      document.getElementById(prev.pane).classList.remove('visible');
+      if (prev.tab) document.getElementById(prev.tab).classList.remove('active-orange', 'active-blue');
+
+      const next = config[name];
+      document.getElementById(next.pane).classList.add('visible');
+      if (next.tab) document.getElementById(next.tab).classList.add(next.activeClass);
+
+      if (next.frame && !loaded[name]) {
+        document.getElementById(next.frame).src = next.src;
+        loaded[name] = true;
+      }
+
+      current = name;
+    }
+  </script>
+</body>
+</html>
