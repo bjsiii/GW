@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groundworks Tools</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2a2f45;
+      --blue: #4fc3f7;
+      --orange: #f97316;
+      --purple: #a78bfa;
+      --green: #34d399;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --font-head: 'Bebas Neue', sans-serif;
+      --font-body: 'IBM Plex Mono', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 2.75rem;
+    }
+
+    .header-eyebrow {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-title {
+      font-family: var(--font-head);
+      font-size: clamp(48px, 10vw, 72px);
+      letter-spacing: 0.04em;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .header-title span {
+      color: var(--orange);
+    }
+
+    .header-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* App Cards */
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      display: block;
+      text-decoration: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem 1.5rem 1.25rem;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 100%;
+      border-radius: 6px 0 0 6px;
+    }
+
+    .card-blue::before  { background: var(--blue); }
+    .card-orange::before { background: var(--orange); }
+
+    .card:hover {
+      background: var(--surface2);
+      transform: translateY(-1px);
+    }
+
+    .card:hover.card-blue  { border-color: var(--blue); }
+    .card:hover.card-orange { border-color: var(--orange); }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 32px;
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+
+    .card-blue  .card-title { color: var(--blue); }
+    .card-orange .card-title { color: var(--orange); }
+
+    .card-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      white-space: nowrap;
+      margin-top: 4px;
+    }
+
+    .card-blue  .card-badge { background: rgba(79,195,247,0.12); color: var(--blue); }
+    .card-orange .card-badge { background: rgba(249,115,22,0.12); color: var(--orange); }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .card-blue  .card-footer { color: var(--blue); }
+    .card-orange .card-footer { color: var(--orange); }
+
+    .arrow {
+      display: inline-block;
+      transition: transform 0.15s;
+    }
+
+    .card:hover .arrow { transform: translateX(4px); }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 2.5rem;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <div class="header">
+      <p class="header-eyebrow">Groundworks</p>
+      <h1 class="header-title">SALES<span>TOOLS</span></h1>
+      <p class="header-sub">Select a tool to get started</p>
+    </div>
+
+    <div class="cards">
+
+      <a href="https://bjsiii.github.io/WPWills/index.html" class="card card-orange">
+        <div class="card-header">
+          <div class="card-title">WILLS BUILDER</div>
+          <span class="card-badge">Contract Gen</span>
+        </div>
+        <p class="card-desc">
+          Checklist-driven contractor &amp; customer will generator.
+          Covers waterproofing, foundation repair, crawlspace, and concrete lifting.
+        </p>
+        <div class="card-footer">
+          Open Wills Builder <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://bjsiii.github.io/PropertyLookup/index.html" class="card card-blue">
+        <div class="card-header">
+          <div class="card-title">PROPERTY LOOKUP</div>
+          <span class="card-badge">Assessor DB</span>
+        </div>
+        <p class="card-desc">
+          Quick access to MA &amp; RI town assessor databases.
+          Tap a town to open its portal and search for field sketches with dimensions.
+        </p>
+        <div class="card-footer">
+          Open Property Lookup <span class="arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+
+    <p class="footer">Groundworks — Internal Sales Tools</p>
+
+  </div>
+</body>
+</html>
