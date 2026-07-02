@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CFITOOLS test harness</title>
+  <style>
+    body { font: 13px/1.5 ui-monospace, monospace; margin: 16px; background: #0f1117; color: #e8e8e8; }
+    #test-results { white-space: pre-wrap; }
+    .pass { color: #34d399; }
+    .fail { color: #f87171; }
+  </style>
+</head>
+<body>
+<div id="root" style="position:fixed;left:-10000px;top:0;width:1280px;height:900px;overflow:hidden"></div>
+<h1 id="test-summary">running…</h1>
+<pre id="test-results"></pre>
+
+<!-- Same vendor + app files, same load order and presets as the shipped bundle -->
+<script src="../_src/vendor/react.development.js"></script>
+<script src="../_src/vendor/react-dom.development.js"></script>
+<script src="../_src/vendor/babel-or-bundle.js"></script>
+
+<script type="text/babel" src="../_src/app/JobInfoBar.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/ProductBar.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/SectionLabel.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/FlightPlanItem.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/WallTable.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/FlightPlan.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/WillBlock.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/OutputBlock.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/CoverMove.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/App.jsx" data-presets="react"></script>
+
+<script type="text/babel" src="tests.jsx" data-presets="react"></script>
+</body>
+</html>
