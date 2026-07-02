@@ -51,6 +51,9 @@ def main():
     browser = find_browser()
     port = free_port()
     os.chdir(ROOT)
+    if not os.path.isdir(os.path.join(ROOT, "_src")):
+        # fresh clone: _src/ is gitignored; regenerate it from the bundle
+        subprocess.run([sys.executable, os.path.join(ROOT, "_bundle.py"), "extract"], check=True)
     httpd = socketserver.TCPServer(("127.0.0.1", port), Quiet)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     failures = 0
