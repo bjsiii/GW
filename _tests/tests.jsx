@@ -470,7 +470,12 @@ async function runIntegration(){
     await tick(80);
     assertEq(document.querySelector('input[placeholder^="e.g. side gate"]').value, 'bulkhead',
       'nameless dirty job is NOT cleared by New Customer');
-    assert(window.__ALERTS__.some(m => /customer name/i.test(m)), 'user is told why (alert fired)');
+    const dlg = document.querySelector('[data-cfi-dialog]');
+    assert(dlg, 'in-app dialog shown (not native alert)');
+    assert(/customer name/i.test(dlg.textContent), 'dialog explains the name requirement');
+    dlg.querySelector('[data-cfi-confirm]').click();
+    await tick();
+    assert(!document.querySelector('[data-cfi-dialog]'), 'dialog dismissed');
     // with a name, New Customer files the job and clears everything
     setInput(document.querySelector('#cust'), 'CM Test');
     await tick();
@@ -511,6 +516,32 @@ async function runIntegration(){
     assertEq(document.querySelector('#cust').value, 'Test Person', 'restore rehydrates the job');
     const restoredWall = document.querySelector('.rail .wtbl input[inputmode="decimal"]');
     assertEq(restoredWall.value, '42', 'restored wall length back in the table');
+  });
+
+  await checkAsync('dialog: cfiConfirm resolves true on confirm, false on cancel and overlay click', async () => {
+    let p = window.cfiConfirm({ title:'T', message:'M', confirmText:'Yes' });
+    let dlg = document.querySelector('[data-cfi-dialog]');
+    assert(dlg, 'confirm dialog rendered');
+    assert(dlg.querySelector('[data-cfi-cancel]'), 'has a cancel button');
+    dlg.querySelector('[data-cfi-confirm]').click();
+    assertEq(await p, true, 'confirm → true');
+
+    p = window.cfiConfirm({ title:'T', message:'M' });
+    document.querySelector('[data-cfi-dialog] [data-cfi-cancel]').click();
+    assertEq(await p, false, 'cancel → false');
+
+    p = window.cfiConfirm({ title:'T', message:'M' });
+    dlg = document.querySelector('[data-cfi-dialog]');
+    dlg.dispatchEvent(new MouseEvent('click', { bubbles:true })); // click the backdrop itself
+    assertEq(await p, false, 'overlay click → false');
+
+    p = window.cfiAlert({ title:'T', message:'<b>escaped?</b>' });
+    dlg = document.querySelector('[data-cfi-dialog]');
+    assert(!dlg.querySelector('b'), 'message HTML is escaped');
+    assert(!dlg.querySelector('[data-cfi-cancel]'), 'alert has no cancel button');
+    dlg.querySelector('[data-cfi-confirm]').click();
+    await p;
+    assert(!document.querySelector('[data-cfi-dialog]'), 'no dialog left behind');
   });
 
   await checkAsync('docx: zip container bytes (async read)', async () => {

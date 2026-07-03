@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>dialog preview</title>
+<style>
+  :root{
+    --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+    --sans:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    --ink:#15171b; --ink-mid:#3c3c43; --ink-mute:#6b6b70;
+    --rule:#d8dadf; --warn:#c2410c; --warn-tint:#fde6d6;
+  }
+  body{background:#faf9f5;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>localStorage.clear();</script>
+<script src="../_src/vendor/react.production.min.js"></script>
+<script src="../_src/vendor/react-dom.production.min.js"></script>
+<script src="../_src/vendor/babel-or-bundle.js"></script>
+<script type="text/babel" src="../_src/app/JobInfoBar.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/ProductBar.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/SectionLabel.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/FlightPlanItem.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/WallTable.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/FlightPlan.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/WillBlock.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/OutputBlock.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/CoverMove.jsx" data-presets="react"></script>
+<script type="text/babel" src="../_src/app/App.jsx" data-presets="react"></script>
+<script type="text/babel" data-presets="react">
+setTimeout(() => {
+  window.cfiConfirm({
+    title: 'Handoff has gaps',
+    message: '• BW: Utilities Protection unconfirmed\n• BW: Permit B unconfirmed\n• Installation Overview contains "TBD" quantities',
+    confirmText: 'Download anyway',
+  });
+}, 300);
+</script>
+</body>
+</html>
