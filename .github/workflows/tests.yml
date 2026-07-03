@@ -1,0 +1,20 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # _src/ is gitignored; run.py extracts it from the bundled index.html,
+      # then drives the 49-check suite through headless Chrome and smoke-boots
+      # the shipped index.html.
+      - name: Run test suite
+        run: python _tests/run.py --verbose

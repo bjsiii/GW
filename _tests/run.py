@@ -7,7 +7,7 @@ test) through headless Edge/Chrome, and reports pass/fail.
   python _tests/run.py            # run the suite
   python _tests/run.py --verbose  # also print every PASS line
 """
-import http.server, os, re, socket, socketserver, subprocess, sys, threading
+import http.server, os, re, shutil, socket, socketserver, subprocess, sys, threading
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -18,12 +18,19 @@ BROWSERS = [
     r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
 ]
 
+PATH_NAMES = ["msedge", "google-chrome", "google-chrome-stable", "chromium", "chromium-browser"]
+
 
 def find_browser():
-    for p in BROWSERS:
+    for name in PATH_NAMES:  # Linux/CI (GitHub runners ship google-chrome)
+        p = shutil.which(name)
+        if p:
+            return p
+    for p in BROWSERS:  # Windows install locations
         if os.path.exists(p):
             return p
-    sys.exit("No Edge/Chrome found for headless run. Checked:\n  " + "\n  ".join(BROWSERS))
+    sys.exit("No Edge/Chrome found for headless run. Checked PATH ("
+             + ", ".join(PATH_NAMES) + ") and:\n  " + "\n  ".join(BROWSERS))
 
 
 def free_port():
@@ -38,11 +45,13 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
 
 
 def dump_dom(browser, url, budget_ms=25000):
-    out = subprocess.run(
-        [browser, "--headless=new", "--disable-gpu", "--no-first-run",
-         "--disable-extensions", "--disable-sync", "--no-default-browser-check",
-         f"--virtual-time-budget={budget_ms}", "--dump-dom", url],
-        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+    args = [browser, "--headless=new", "--disable-gpu", "--no-first-run",
+            "--disable-extensions", "--disable-sync", "--no-default-browser-check",
+            f"--virtual-time-budget={budget_ms}", "--dump-dom", url]
+    if os.environ.get("CI"):
+        args.insert(1, "--no-sandbox")
+    out = subprocess.run(args, capture_output=True, text=True,
+                         encoding="utf-8", errors="replace", timeout=180)
     return out.stdout or ""
 
 
