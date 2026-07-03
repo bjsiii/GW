@@ -443,7 +443,9 @@ async function runIntegration(){
     ebBoxes[0].click(); await tick();
     ebBoxes[1].click(); await tick();
     assert(ebRow().textContent.includes('144 SF'), 'two walls opted in → 36×4 = 144 SF, got: ' + ebRow().textContent);
-    // reset app state for the following tests
+    // reset app state for the following tests (dirty job → needs a name to file)
+    setInput(document.querySelector('#cust'), 'EB Test');
+    await tick();
     document.querySelector('.btn-reset').click();
     await tick(80);
   });
@@ -463,11 +465,22 @@ async function runIntegration(){
     document.querySelectorAll('.main-tab')[1].click(); await tick();
     const access2 = document.querySelector('input[placeholder^="e.g. side gate"]');
     assertEq(access2.value, 'bulkhead', 'value survives tab switch');
-    // New Customer must clear it
+    // dirty job + no customer name → New Customer must REFUSE (no silent data loss)
+    document.querySelector('.btn-reset').click();
+    await tick(80);
+    assertEq(document.querySelector('input[placeholder^="e.g. side gate"]').value, 'bulkhead',
+      'nameless dirty job is NOT cleared by New Customer');
+    assert(window.__ALERTS__.some(m => /customer name/i.test(m)), 'user is told why (alert fired)');
+    // with a name, New Customer files the job and clears everything
+    setInput(document.querySelector('#cust'), 'CM Test');
+    await tick();
     document.querySelector('.btn-reset').click();
     await tick(80);
     const access3 = document.querySelector('input[placeholder^="e.g. side gate"]');
-    assertEq(access3.value, '', 'New Customer must clear Cover & Move fields');
+    assertEq(access3.value, '', 'named job files and Cover & Move clears');
+    const hist = JSON.parse(localStorage.getItem(window.__CFI_STORE__.HIST_KEY));
+    assert(hist[0].customer === 'CM Test' && hist[0].cm.access === 'bulkhead',
+      'CM-only job was archived with its fields, not discarded');
   });
 
   await checkAsync('app: autosave persists, New Customer archives to history, restore brings it back', async () => {

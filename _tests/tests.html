@@ -15,8 +15,14 @@
 <h1 id="test-summary">running…</h1>
 <pre id="test-results"></pre>
 
-<!-- Deterministic runs: the app hydrates from localStorage at load -->
-<script>localStorage.clear();</script>
+<!-- Deterministic runs: the app hydrates from localStorage at load.
+     Dialogs are stubbed — a real alert/confirm freezes headless virtual time. -->
+<script>
+  localStorage.clear();
+  window.__ALERTS__ = [];
+  window.alert = function(msg){ window.__ALERTS__.push(String(msg)); };
+  window.confirm = function(){ return true; };
+</script>
 
 <!-- Same vendor + app files, same load order and presets as the shipped bundle -->
 <script src="../_src/vendor/react.production.min.js"></script>
