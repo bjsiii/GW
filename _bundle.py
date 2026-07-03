@@ -38,10 +38,12 @@ def name_for(uid, mime, content_bytes):
         return f"app/{m.group(1)}"
     if mime.startswith("font/"):
         return f"fonts/{uid[:8]}.{EXT.get(mime,'bin')}"
-    # react/react-dom/babel dev bundles
+    # react/react-dom/babel bundles (production or development headers)
     low = head.lower()
-    if "react-dom.development" in low: return "vendor/react-dom.development.js"
-    if "react.development" in low:     return "vendor/react.development.js"
+    if "react-dom.development" in low or "react-dom.production" in low:
+        return "vendor/react-dom.production.min.js"
+    if "react.development" in low or "react.production" in low:
+        return "vendor/react.production.min.js"
     if "babel" in low or "!function" in head[:30]: return "vendor/babel-or-bundle.js"
     return f"_unmapped/{uid[:8]}.{EXT.get(mime,'bin')}"
 
