@@ -27,15 +27,15 @@ function bwWith(walls, patch){
 }
 function csWith(walls, patch){
   const d = clone(window.INITIAL_CS);
-  if(walls) d.walls = walls.map((w,i) => ({ id:i+1, n:i+1, length:String(w.length), dir:w.dir||'N', cd:!!w.cd, wl:!!w.wl }));
+  if(walls) d.walls = walls.map((w,i) => ({ id:i+1, n:i+1, length:String(w.length), dir:w.dir||'N', cd:!!w.cd, wl:!!w.wl, eb:!!w.eb }));
   return Object.assign(d, patch || {});
 }
-// 24×12 closed rectangle, all CrawlDrain, wall liner on the two long sides
+// 24×12 closed rectangle, all CrawlDrain + EtremeBloc, wall liner on the two long sides
 const CS_RECT = [
-  { length:24, dir:'N', cd:true, wl:true  },
-  { length:12, dir:'E', cd:true, wl:false },
-  { length:24, dir:'S', cd:true, wl:true  },
-  { length:12, dir:'W', cd:true, wl:false },
+  { length:24, dir:'N', cd:true, wl:true,  eb:true },
+  { length:12, dir:'E', cd:true, wl:false, eb:true },
+  { length:24, dir:'S', cd:true, wl:true,  eb:true },
+  { length:12, dir:'W', cd:true, wl:false, eb:true },
 ];
 
 // ── BW math & wills ──────────────────────────────────────────────────────────
@@ -191,6 +191,25 @@ check('cs: empty flight plan → zero totals, no SYSTEM bullet', () => {
 check('cs: blank height falls back to 4 ft in SF math (documented behavior)', () => {
   const r = window.deriveCSBullets(csWith(CS_RECT, { height:'' }));
   assertEq(r.wlSF, 192, 'blank height treated as 4');
+});
+
+check('cs: EtremeBloc follows its own EB column, not CD or WL', () => {
+  const r = window.deriveCSBullets(csWith([
+    { length:24, dir:'N', cd:true,  wl:true, eb:true  },
+    { length:12, dir:'E', cd:true,  wl:false, eb:false },
+    { length:24, dir:'S', cd:false, wl:true, eb:true  },
+    { length:12, dir:'W', cd:true,  wl:false, eb:false },
+  ], { height:'4' }));
+  assertEq(r.etremeblocSF, 192, 'EB walls only: (24+24)×4, CD/WL ignored');
+  assertEq(byLabel(r.contractor,'ETREMEBLOC INSULATION').length, 1, 'bullet fires from EB walls');
+});
+
+check('cs: no EB walls → no EtremeBloc SF or bullet, even with full CrawlDrain', () => {
+  const walls = CS_RECT.map(w => ({ ...w, eb:false }));
+  const r = window.deriveCSBullets(csWith(walls, { height:'4' }));
+  assertEq(r.etremeblocSF, 0, 'no EB walls → 0 SF');
+  assertEq(byLabel(r.contractor,'ETREMEBLOC INSULATION').length, 0, 'no bullet');
+  assertEq(r.cdLF, 72, 'CrawlDrain unaffected');
 });
 
 check('cs: WALL LINER bullet fires from WL wall checkboxes alone', () => {
@@ -354,6 +373,33 @@ async function runIntegration(){
     await tick();
     const matl = document.querySelector('#out-bw .matl').textContent;
     assert(matl.includes('30 LF'), 'BasementGutter 30 LF in materials, got: ' + matl.slice(0,200));
+  });
+
+  await checkAsync('app: CS wall table renders EB column; preset flows to EtremeBloc SF', async () => {
+    document.querySelector('.pbtn.cs').click();
+    await tick();
+    // rail switches to CS via the sub-tab when 2+ products active
+    const csTab = document.querySelector('.rail-tab.cs');
+    if(csTab){ csTab.click(); await tick(); }
+    const headers = Array.from(document.querySelectorAll('.rail .wtbl th')).map(th => th.textContent);
+    assert(headers.includes('EB'), 'EB header present, got: ' + headers.join(','));
+    assert(document.querySelector('.rail .wtbl input.chkbox.eb'), 'EB checkbox rendered');
+    // rectangle preset checks EB on all walls → 72×4 = 288 SF in the rail readout
+    const preset = Array.from(document.querySelectorAll('.rail button')).find(b => /Rectangle Preset/.test(b.textContent));
+    preset.click();
+    await tick();
+    const ebRow = () => Array.from(document.querySelectorAll('.rail .fp-item'))
+      .find(el => el.textContent.includes('EtremeBloc'));
+    assert(ebRow(), 'EtremeBloc row present');
+    assert(ebRow().textContent.includes('288 SF'), 'preset: all 4 EB walls → 72×4 = 288 SF, got: ' + ebRow().textContent);
+    // opt the 24-ft N wall out of EB → (12+24+12)×4 = 192 SF
+    const ebBoxes = document.querySelectorAll('.rail .wtbl input.chkbox.eb');
+    ebBoxes[0].click();
+    await tick();
+    assert(ebRow().textContent.includes('192 SF'), 'one wall opted out → 48×4 = 192 SF, got: ' + ebRow().textContent);
+    // reset app state for the following tests
+    document.querySelector('.btn-reset').click();
+    await tick(80);
   });
 
   await checkAsync('app: New Customer resets Cover & Move fields', async () => {
