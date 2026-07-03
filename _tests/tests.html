@@ -15,6 +15,9 @@
 <h1 id="test-summary">running…</h1>
 <pre id="test-results"></pre>
 
+<!-- Deterministic runs: the app hydrates from localStorage at load -->
+<script>localStorage.clear();</script>
+
 <!-- Same vendor + app files, same load order and presets as the shipped bundle -->
 <script src="../_src/vendor/react.development.js"></script>
 <script src="../_src/vendor/react-dom.development.js"></script>

@@ -299,6 +299,52 @@ check('docx: zip container — signatures, 4 entries, document.xml present', asy
   window.__DOCX_BLOB__ = blob;
 });
 
+// ── Autosave store & download guard ─────────────────────────────────────────
+check('store: saved job round-trips; wrong version and garbage are rejected', () => {
+  const { JOB_KEY, loadSavedJob } = window.__CFI_STORE__;
+  const payload = { v:1, savedAt: 123, customer:'Jane', address:'1 Elm St', phone:'', active:{bw:true,cs:false,fr:false,cl:false} };
+  localStorage.setItem(JOB_KEY, JSON.stringify(payload));
+  assertEq(loadSavedJob().customer, 'Jane', 'round-trip');
+  localStorage.setItem(JOB_KEY, JSON.stringify({ ...payload, v: 99 }));
+  assertEq(loadSavedJob(), null, 'future schema version rejected');
+  localStorage.setItem(JOB_KEY, '{not json');
+  assertEq(loadSavedJob(), null, 'garbage rejected');
+  localStorage.removeItem(JOB_KEY);
+});
+
+check('store: mergeState fills keys an older save is missing', () => {
+  const { mergeState } = window.__CFI_STORE__;
+  const oldSave = { height:'6', items: { pump: { checked:true, variant:'single', bbu:false } } };
+  const merged = mergeState(clone(window.INITIAL_CS), oldSave);
+  assertEq(merged.height, '6', 'saved value wins');
+  assertEq(merged.items.pump.variant, 'single', 'saved item wins');
+  assert(merged.items.crawlLiner, 'missing items filled from defaults');
+  assertEq(merged.overage, 0, 'missing top-level keys filled from defaults');
+  const mergedCm = mergeState(clone(window.INITIAL_CM), { access:'bulkhead', pay:{ depCard:true } });
+  assertEq(mergedCm.pay.depCard, true, 'saved pay wins');
+  assertEq(mergedCm.pay.finCard, true, 'missing pay keys filled from defaults');
+});
+
+check('guard: unconfirmed requireds, empty systems, and TBD all warn', () => {
+  const bw = bwWith([{ length:30, g:true }]);
+  const bwD = window.deriveBWBullets(bw);
+  let w = window.collectDownloadWarnings(bw, null, bwD, null, 'AquaGrate: TBD LF');
+  assert(w.some(x => /BW: Utilities Protection/.test(x)), 'utilities warn');
+  assert(w.some(x => /BW: Permit B/.test(x)), 'permit warn');
+  assert(w.some(x => /TBD/.test(x)), 'TBD warn');
+  assert(!w.some(x => /0 LF/.test(x)), 'no 0-LF warn when gutter exists');
+  const csEmpty = clone(window.INITIAL_CS);
+  w = window.collectDownloadWarnings(null, csEmpty, null, window.deriveCSBullets(csEmpty), '');
+  assert(w.some(x => /CS is active but CrawlDrain is 0 LF/.test(x)), 'empty CS system warns');
+});
+
+check('guard: fully confirmed job produces no warnings', () => {
+  const bw = bwWith([{ length:30, g:true }]);
+  bw.items.util.checked = true; bw.items.permit.checked = true;
+  const w = window.collectDownloadWarnings(bw, null, window.deriveBWBullets(bw), null, '[ACCESS]\nall good');
+  assertEq(w.length, 0, 'no warnings, got: ' + JSON.stringify(w));
+});
+
 // ── Assessor address parsing / phone format ──────────────────────────────────
 check('parse: comma-delimited town', () => {
   assertEq(window.parseAddressTown('123 Main St, Franklin, MA 02038'), 'franklin');
@@ -391,12 +437,12 @@ async function runIntegration(){
     const ebRow = () => Array.from(document.querySelectorAll('.rail .fp-item'))
       .find(el => el.textContent.includes('EtremeBloc'));
     assert(ebRow(), 'EtremeBloc row present');
-    assert(ebRow().textContent.includes('288 SF'), 'preset: all 4 EB walls → 72×4 = 288 SF, got: ' + ebRow().textContent);
-    // opt the 24-ft N wall out of EB → (12+24+12)×4 = 192 SF
+    assert(ebRow().textContent.includes('0 SF'), 'preset defaults EB off → 0 SF, got: ' + ebRow().textContent);
+    // opt the N24 and E12 walls in → (24+12)×4 = 144 SF
     const ebBoxes = document.querySelectorAll('.rail .wtbl input.chkbox.eb');
-    ebBoxes[0].click();
-    await tick();
-    assert(ebRow().textContent.includes('192 SF'), 'one wall opted out → 48×4 = 192 SF, got: ' + ebRow().textContent);
+    ebBoxes[0].click(); await tick();
+    ebBoxes[1].click(); await tick();
+    assert(ebRow().textContent.includes('144 SF'), 'two walls opted in → 36×4 = 144 SF, got: ' + ebRow().textContent);
     // reset app state for the following tests
     document.querySelector('.btn-reset').click();
     await tick(80);
@@ -422,6 +468,36 @@ async function runIntegration(){
     await tick(80);
     const access3 = document.querySelector('input[placeholder^="e.g. side gate"]');
     assertEq(access3.value, '', 'New Customer must clear Cover & Move fields');
+  });
+
+  await checkAsync('app: autosave persists, New Customer archives to history, restore brings it back', async () => {
+    const { JOB_KEY, HIST_KEY } = window.__CFI_STORE__;
+    setInput(document.querySelector('#cust'), 'Test Person');
+    document.querySelector('.pbtn.bw').click(); // products were reset off above
+    await tick();
+    const wallInput = document.querySelector('.rail .wtbl input[inputmode="decimal"]');
+    setInput(wallInput, '42');
+    await tick(400); // let the 250ms autosave debounce flush
+    const saved = JSON.parse(localStorage.getItem(JOB_KEY));
+    assertEq(saved.customer, 'Test Person', 'autosaved customer');
+    assert(saved.bwData.walls.some(w => w.length === '42'), 'autosaved wall length');
+    assert(saved.active.bw, 'autosaved active products');
+    // New Customer archives the job and clears the form
+    document.querySelector('.btn-reset').click();
+    await tick(400);
+    const hist = JSON.parse(localStorage.getItem(HIST_KEY));
+    assert(hist.length >= 1 && hist[0].customer === 'Test Person', 'history[0] is the archived job');
+    assertEq(document.querySelector('#cust').value, '', 'form cleared after archive');
+    // restore it from the Jobs dropdown
+    const jobsBtn = document.querySelector('.btn-jobs');
+    assert(jobsBtn, 'Jobs button visible once history exists');
+    jobsBtn.click(); await tick();
+    const item = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Test Person'));
+    assert(item, 'history item listed in dropdown');
+    item.click(); await tick(100);
+    assertEq(document.querySelector('#cust').value, 'Test Person', 'restore rehydrates the job');
+    const restoredWall = document.querySelector('.rail .wtbl input[inputmode="decimal"]');
+    assertEq(restoredWall.value, '42', 'restored wall length back in the table');
   });
 
   await checkAsync('docx: zip container bytes (async read)', async () => {
